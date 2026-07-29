@@ -49,3 +49,6 @@ prisma/migrations/
 
 # Local test files
 test-invoice.pdf
+
+# VS Code
+.vscode/
