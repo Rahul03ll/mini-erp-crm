@@ -4,6 +4,7 @@ import { ChallanStatus, MovementType } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { authenticate, authorize } from '../middleware/auth';
 import { validateBody, AppError, getPagination, paramId } from '../middleware/errorHandler';
+import { generateInvoicePDF } from '../lib/pdfGenerator';
 
 const router = Router();
 
@@ -294,6 +295,46 @@ router.post('/:id/cancel', authorize('manage_challans'), async (req, res, next) 
     });
 
     res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PDF Invoice Generation
+router.get('/:id/invoice', async (req, res, next) => {
+  try {
+    const canView = ['Admin', 'Sales', 'Accounts'].includes(req.user!.role);
+    if (!canView) throw new AppError(403, 'Insufficient permissions');
+
+    const challan = await prisma.challan.findUnique({
+      where: { id: paramId(req.params.id) },
+      include: {
+        customer: true,
+        creator: { select: { name: true } },
+        lineItems: true,
+      },
+    });
+
+    if (!challan) throw new AppError(404, 'Challan not found');
+
+    if (req.user!.role === 'Sales' && challan.createdBy !== req.user!.userId) {
+      throw new AppError(403, 'Insufficient permissions');
+    }
+
+    // Only allow PDF generation for confirmed challans
+    if (challan.status !== ChallanStatus.Confirmed) {
+      throw new AppError(400, 'Only confirmed challans can be exported as invoices');
+    }
+
+    // Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=invoice-${challan.challanNumber}.pdf`
+    );
+
+    // Generate and stream PDF
+    generateInvoicePDF(challan, res);
   } catch (error) {
     next(error);
   }
