@@ -6,8 +6,8 @@ A full-stack wholesale/distribution operations portal for managing customers, pr
 
 | Service  | URL |
 |----------|-----|
-| Frontend | _Deploy to Vercel/Netlify — see Deployment section_ |
-| Backend  | _Deploy to Render/Railway — see Deployment section_ |
+| Frontend | https://mini-erp-crm-omega.vercel.app |
+| Backend  | https://mini-erp-crm-backend-cklw.onrender.com |
 
 ## Tech Stack
 
