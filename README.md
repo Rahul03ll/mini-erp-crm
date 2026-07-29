@@ -1,6 +1,14 @@
 # Mini ERP/CRM Operations Portal
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 A full-stack wholesale/distribution operations portal for managing customers, products, inventory, sales challans, and CRM follow-ups.
+
+> 🚀 **Live Demo:** [https://mini-erp-crm-omega.vercel.app](https://mini-erp-crm-omega.vercel.app)
 
 ## Live URLs
 
@@ -175,6 +183,7 @@ casestudy/
 │   ├── src/
 │   │   ├── routes/             # API route handlers
 │   │   ├── middleware/         # Auth, validation, errors
+│   │   ├── lib/                # Utilities (Prisma, PDF generator)
 │   │   └── index.ts            # Express app entry
 │   └── render.yaml             # Render deployment config
 ├── frontend/
@@ -184,5 +193,38 @@ casestudy/
 │       ├── api/client.ts       # API client
 │       └── context/            # Auth context
 ├── postman/                    # Postman collection
-└── README.md
+├── .github/                    # GitHub templates
+├── CONTRIBUTING.md             # Contribution guidelines
+├── CHANGELOG.md                # Version history
+├── LICENSE                     # MIT License
+├── TEST_REPORT.md              # Test results
+├── PROJECT_SUMMARY.md          # Quick reference
+└── README.md                   # This file
 ```
+
+## 📄 Documentation
+
+- **[API Documentation](postman/Mini_ERP_CRM.postman_collection.json)** - Postman collection
+- **[Test Report](TEST_REPORT.md)** - Comprehensive test results
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+- **[Changelog](CHANGELOG.md)** - Version history
+- **[Project Summary](PROJECT_SUMMARY.md)** - Quick reference
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👤 Author
+
+**Rahul03ll**
+- GitHub: [@Rahul03ll](https://github.com/Rahul03ll)
+
+## 🙏 Acknowledgments
+
+- Built as a case study project for wholesale/distribution operations
+- Uses modern web technologies and best practices
+- Deployed on free-tier cloud services (Render, Vercel, Neon)
