@@ -26,7 +26,7 @@ A full-stack wholesale/distribution operations portal for managing customers, pr
 ## Architecture
 
 ```
-┌─────────────┐     REST/JSON      ┌──────────────┐     Prisma     ┌────────────┐
+┌─────────────┐     REST/JSON    ┌──────────────┐     Prisma     ┌────────────┐
 │  React SPA  │ ◄──────────────► │  Express API │ ◄────────────► │ PostgreSQL │
 │  (Vite)     │   JWT Auth       │  + Zod       │                │            │
 └─────────────┘                  └──────────────┘                └────────────┘
