@@ -29,6 +29,7 @@ A full-stack wholesale/distribution operations portal for managing customers, pr
 2. **Customer CRM** — CRUD, search, timestamped follow-up notes
 3. **Product & Inventory** — CRUD, stock movement log (IN/OUT), low-stock filter
 4. **Sales Challan** — Draft → Confirm flow with atomic stock validation & reduction
+5. **Invoice Export** — PDF invoice generation for confirmed challans
 
 ## Role Permissions
 
@@ -149,6 +150,7 @@ Alternatively, use the included `backend/render.yaml` Blueprint.
 | GET/PUT | `/challans/:id` | Get / Update draft challan |
 | POST | `/challans/:id/confirm` | Confirm & deduct stock |
 | POST | `/challans/:id/cancel` | Cancel draft challan |
+| GET | `/challans/:id/invoice` | Download invoice PDF (confirmed challans only) |
 
 All endpoints except `/health` and `/auth/login` require `Authorization: Bearer <token>`.
 
@@ -156,7 +158,7 @@ Import the Postman collection from `postman/Mini_ERP_CRM.postman_collection.json
 
 ## Known Limitations
 
-- No PDF invoice export (out of scope)
+- ~~No PDF invoice export (out of scope)~~ **✅ Now available!**
 - No product image upload
 - No Docker/CI-CD setup
 - Sales users scoped to their own challans only
