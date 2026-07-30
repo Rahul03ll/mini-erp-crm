@@ -166,7 +166,7 @@ Import the Postman collection from `postman/Mini_ERP_CRM.postman_collection.json
 
 ## Known Limitations
 
-- ~~No PDF invoice export (out of scope)~~ **✅ Now available!**
+- No PDF invoice export 
 - No product image upload
 - No Docker/CI-CD setup
 - Sales users scoped to their own challans only
