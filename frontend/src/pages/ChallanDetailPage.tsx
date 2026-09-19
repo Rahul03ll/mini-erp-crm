@@ -57,27 +57,7 @@ export default function ChallanDetailPage() {
     setActionLoading('invoice');
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/challans/${id}/invoice`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to download invoice');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${challan.challanNumber}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await api.downloadInvoice(id, challan.challanNumber);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to download invoice');
     } finally {
