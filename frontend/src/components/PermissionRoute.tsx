@@ -5,14 +5,21 @@ import { ReactNode } from 'react';
 
 export function PermissionRoute({
   permission,
+  permissions,
   children,
 }: {
-  permission: Permission;
+  permission?: Permission;
+  permissions?: Permission[];
   children: ReactNode;
 }) {
   const { user } = useAuth();
 
-  if (!user || !hasPermission(user.role, permission)) {
+  const isAllowed =
+    user &&
+    ((permission && hasPermission(user.role, permission)) ||
+      (permissions && permissions.some((p) => hasPermission(user.role, p))));
+
+  if (!isAllowed) {
     return <Navigate to="/" replace />;
   }
 

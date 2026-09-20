@@ -54,8 +54,11 @@ export function errorHandler(
 }
 
 export function getPagination(query: Record<string, unknown>) {
-  const page = Math.max(1, parseInt(String(query.page || '1'), 10) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(String(query.limit || '10'), 10) || 10));
+  const parsedPage = parseInt(String(query.page ?? '1'), 10);
+  const page = Math.max(1, isNaN(parsedPage) ? 1 : parsedPage);
+
+  const parsedLimit = parseInt(String(query.limit ?? '10'), 10);
+  const limit = Math.min(100, Math.max(1, isNaN(parsedLimit) ? 10 : parsedLimit));
   const skip = (page - 1) * limit;
   return { page, limit, skip };
 }

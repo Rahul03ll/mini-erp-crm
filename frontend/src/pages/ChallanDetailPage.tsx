@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api/client';
-import { Challan } from '../types';
+import { Challan, hasPermission } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 export default function ChallanDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [challan, setChallan] = useState<Challan | null>(null);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState('');
@@ -75,10 +77,13 @@ export default function ChallanDetailPage() {
   const statusColor = challan.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
     challan.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600';
 
+  const canManage = user && hasPermission(user.role, 'manage_challans');
+  const backPath = canManage ? '/challans' : '/reports';
+
   return (
     <div className="max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link to="/challans" className="text-blue-600 text-sm hover:underline">&larr; Back</Link>
+        <Link to={backPath} className="text-blue-600 text-sm hover:underline">&larr; Back</Link>
         <h2 className="text-2xl font-bold font-mono">{challan.challanNumber}</h2>
         <span className={`px-2 py-0.5 rounded text-xs ${statusColor}`}>{challan.status}</span>
       </div>
@@ -123,7 +128,7 @@ export default function ChallanDetailPage() {
           </tfoot>
         </table>
 
-        {challan.status === 'Draft' && (
+        {challan.status === 'Draft' && canManage && (
           <div className="flex gap-3">
             <button onClick={handleConfirm} disabled={!!actionLoading}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-sm">

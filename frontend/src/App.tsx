@@ -46,7 +46,7 @@ export default function App() {
         <Route path="/products/:id" element={<PermissionRoute permission="manage_products"><ProductDetailPage /></PermissionRoute>} />
         <Route path="/challans" element={<PermissionRoute permission="manage_challans"><ChallanListPage /></PermissionRoute>} />
         <Route path="/challans/new" element={<PermissionRoute permission="manage_challans"><ChallanFormPage /></PermissionRoute>} />
-        <Route path="/challans/:id" element={<PermissionRoute permission="manage_challans"><ChallanDetailPage /></PermissionRoute>} />
+        <Route path="/challans/:id" element={<PermissionRoute permissions={['manage_challans', 'view_reports']}><ChallanDetailPage /></PermissionRoute>} />
         <Route path="/reports" element={<PermissionRoute permission="view_reports"><ReportsPage /></PermissionRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

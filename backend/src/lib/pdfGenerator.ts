@@ -20,11 +20,11 @@ export function generateInvoicePDF(
     .text('INVOICE', { align: 'center' })
     .moveDown(0.5);
 
-  // Company Info (you can customize this)
+  // Company Info
   doc
     .fontSize(10)
     .text('Mini ERP/CRM Operations Portal', { align: 'center' })
-    .text('Wholesale & Distribution', { align: 'center' })
+    .text('Wholesale & Distribution Operations', { align: 'center' })
     .moveDown(1.5);
 
   // Invoice Details
@@ -35,47 +35,76 @@ export function generateInvoicePDF(
     .text(`Date: ${new Date(challan.createdDate).toLocaleDateString()}`, 50, invoiceY + 15)
     .text(`Status: ${challan.status}`, 50, invoiceY + 30);
 
-  // Customer Details
-  doc
-    .text(`Bill To:`, 350, invoiceY)
-    .text(challan.customer.name, 350, invoiceY + 15)
-    .text(challan.customer.businessName || '', 350, invoiceY + 30)
-    .text(challan.customer.mobileNumber, 350, invoiceY + 45)
-    .text(challan.customer.email || '', 350, invoiceY + 60)
-    .text(challan.customer.address || '', 350, invoiceY + 75);
+  if (challan.creator?.name) {
+    doc.text(`Issued By: ${challan.creator.name}`, 50, invoiceY + 45);
+  }
 
-  doc.moveDown(4);
+  // Customer Details (Right Aligned)
+  let custY = invoiceY;
+  doc.text('Bill To:', 350, custY);
+  custY += 15;
+  doc.text(challan.customer.name, 350, custY);
+  if (challan.customer.businessName) {
+    custY += 15;
+    doc.text(challan.customer.businessName, 350, custY);
+  }
+  custY += 15;
+  doc.text(`Mobile: ${challan.customer.mobileNumber}`, 350, custY);
+  if (challan.customer.gstNumber) {
+    custY += 15;
+    doc.text(`GSTIN: ${challan.customer.gstNumber}`, 350, custY);
+  }
+  if (challan.customer.email) {
+    custY += 15;
+    doc.text(`Email: ${challan.customer.email}`, 350, custY);
+  }
+  if (challan.customer.address) {
+    custY += 15;
+    doc.text(challan.customer.address, 350, custY, { width: 190 });
+  }
 
-  // Line Items Table
-  const tableTop = doc.y + 20;
+  doc.y = Math.max(invoiceY + 90, custY + 25);
+
+  // Line Items Table Setup
   const itemCodeX = 50;
   const descriptionX = 150;
   const quantityX = 350;
   const priceX = 420;
   const amountX = 490;
 
-  // Table Headers
-  doc
-    .fontSize(10)
-    .fillColor('#000000')
-    .text('SKU', itemCodeX, tableTop)
-    .text('Description', descriptionX, tableTop)
-    .text('Qty', quantityX, tableTop)
-    .text('Price', priceX, tableTop)
-    .text('Amount', amountX, tableTop);
+  const drawTableHeader = (y: number) => {
+    doc
+      .fontSize(10)
+      .fillColor('#000000')
+      .text('SKU', itemCodeX, y)
+      .text('Description', descriptionX, y)
+      .text('Qty', quantityX, y)
+      .text('Price (Rs.)', priceX, y)
+      .text('Amount (Rs.)', amountX, y);
 
-  // Draw header line
-  doc
-    .moveTo(50, tableTop + 15)
-    .lineTo(550, tableTop + 15)
-    .stroke();
+    doc
+      .moveTo(50, y + 15)
+      .lineTo(550, y + 15)
+      .stroke();
+  };
 
-  // Line Items
-  let position = tableTop + 25;
+  let position = doc.y + 10;
+  drawTableHeader(position);
+  position += 25;
+
   let subtotal = 0;
 
   challan.lineItems.forEach((item) => {
-    const amount = Number(item.unitPriceSnapshot) * item.quantity;
+    // Check page overflow
+    if (position > doc.page.height - 140) {
+      doc.addPage();
+      position = 50;
+      drawTableHeader(position);
+      position += 25;
+    }
+
+    const unitPrice = Number(item.unitPriceSnapshot);
+    const amount = unitPrice * item.quantity;
     subtotal += amount;
 
     doc
@@ -83,11 +112,17 @@ export function generateInvoicePDF(
       .text(item.skuSnapshot, itemCodeX, position)
       .text(item.productNameSnapshot, descriptionX, position, { width: 180 })
       .text(item.quantity.toString(), quantityX, position)
-      .text(`$${item.unitPriceSnapshot.toFixed(2)}`, priceX, position)
-      .text(`$${amount.toFixed(2)}`, amountX, position);
+      .text(`Rs. ${unitPrice.toFixed(2)}`, priceX, position)
+      .text(`Rs. ${amount.toFixed(2)}`, amountX, position);
 
     position += 25;
   });
+
+  // Check overflow before totals
+  if (position > doc.page.height - 120) {
+    doc.addPage();
+    position = 50;
+  }
 
   // Draw line before totals
   doc
@@ -97,18 +132,18 @@ export function generateInvoicePDF(
 
   // Totals
   position += 15;
-  const tax = subtotal * 0.1; // 10% tax (customize as needed)
+  const tax = subtotal * 0.1; // 10% GST/Tax
   const total = subtotal + tax;
 
   doc
     .fontSize(10)
-    .text('Subtotal:', 420, position)
-    .text(`$${subtotal.toFixed(2)}`, 490, position)
-    .text('Tax (10%):', 420, position + 20)
-    .text(`$${tax.toFixed(2)}`, 490, position + 20)
-    .fontSize(12)
-    .text('Total:', 420, position + 40)
-    .text(`$${total.toFixed(2)}`, 490, position + 40);
+    .text('Subtotal:', 400, position)
+    .text(`Rs. ${subtotal.toFixed(2)}`, 480, position)
+    .text('GST / Tax (10%):', 400, position + 20)
+    .text(`Rs. ${tax.toFixed(2)}`, 480, position + 20)
+    .fontSize(11)
+    .text('Total:', 400, position + 40)
+    .text(`Rs. ${total.toFixed(2)}`, 480, position + 40);
 
   // Footer
   doc
@@ -116,13 +151,13 @@ export function generateInvoicePDF(
     .text(
       'Thank you for your business!',
       50,
-      doc.page.height - 100,
+      doc.page.height - 80,
       { align: 'center' }
     )
     .text(
       'For inquiries, please contact support@mini-erp-crm.com',
       50,
-      doc.page.height - 85,
+      doc.page.height - 65,
       { align: 'center' }
     );
 

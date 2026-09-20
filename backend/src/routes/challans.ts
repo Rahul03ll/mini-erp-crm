@@ -42,11 +42,23 @@ async function generateChallanNumber(): Promise<string> {
 }
 
 async function buildLineItems(lineItems: { productId: string; quantity: number }[]) {
+  const consolidatedMap = new Map<string, number>();
+  for (const item of lineItems) {
+    consolidatedMap.set(
+      item.productId,
+      (consolidatedMap.get(item.productId) || 0) + item.quantity
+    );
+  }
+  const consolidated = Array.from(consolidatedMap.entries()).map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }));
+
   const products = await Promise.all(
-    lineItems.map((item) => prisma.product.findUnique({ where: { id: item.productId } }))
+    consolidated.map((item) => prisma.product.findUnique({ where: { id: item.productId } }))
   );
 
-  return lineItems.map((item, index) => {
+  return consolidated.map((item, index) => {
     const product = products[index];
     if (!product) throw new AppError(400, `Product not found: ${item.productId}`);
     return {
@@ -173,6 +185,9 @@ router.put('/:id', authorize('manage_challans'), validateBody(challanUpdateSchem
     });
 
     if (!existing) throw new AppError(404, 'Challan not found');
+    if (req.user!.role === 'Sales' && existing.createdBy !== req.user!.userId) {
+      throw new AppError(403, 'Insufficient permissions to modify this challan');
+    }
     if (existing.status !== ChallanStatus.Draft) {
       throw new AppError(400, 'Only draft challans can be edited');
     }
@@ -217,6 +232,9 @@ router.post('/:id/confirm', authorize('manage_challans'), async (req, res, next)
     });
 
     if (!challan) throw new AppError(404, 'Challan not found');
+    if (req.user!.role === 'Sales' && challan.createdBy !== req.user!.userId) {
+      throw new AppError(403, 'Insufficient permissions to confirm this challan');
+    }
     if (challan.status !== ChallanStatus.Draft) {
       throw new AppError(400, 'Only draft challans can be confirmed');
     }
@@ -224,15 +242,24 @@ router.post('/:id/confirm', authorize('manage_challans'), async (req, res, next)
     const lineItems = challan.lineItems;
 
     const result = await prisma.$transaction(async (tx) => {
+      // Aggregate quantities per product to prevent multi-line stock check bypass
+      const productQuantities = new Map<string, number>();
       for (const item of lineItems) {
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        productQuantities.set(
+          item.productId,
+          (productQuantities.get(item.productId) || 0) + item.quantity
+        );
+      }
+
+      for (const [productId, totalRequested] of productQuantities.entries()) {
+        const product = await tx.product.findUnique({ where: { id: productId } });
         if (!product) {
-          throw new AppError(400, `Product not found: ${item.productNameSnapshot}`);
+          throw new AppError(400, `Product not found: ${productId}`);
         }
-        if (item.quantity > product.currentStock) {
+        if (totalRequested > product.currentStock) {
           throw new AppError(
             400,
-            `Insufficient stock for ${product.name}. Available: ${product.currentStock}, Requested: ${item.quantity}`
+            `Insufficient stock for ${product.name}. Available: ${product.currentStock}, Total Requested: ${totalRequested}`
           );
         }
       }
@@ -275,6 +302,10 @@ router.post('/:id/cancel', authorize('manage_challans'), async (req, res, next) 
   try {
     const challan = await prisma.challan.findUnique({ where: { id: paramId(req.params.id) } });
     if (!challan) throw new AppError(404, 'Challan not found');
+
+    if (req.user!.role === 'Sales' && challan.createdBy !== req.user!.userId) {
+      throw new AppError(403, 'Insufficient permissions to cancel this challan');
+    }
 
     if (challan.status === ChallanStatus.Cancelled) {
       throw new AppError(400, 'Challan is already cancelled');

@@ -43,7 +43,7 @@ export default function CustomerDetailPage() {
     try {
       await api.updateCustomer(id, {
         ...form,
-        email: form.email || undefined,
+        email: form.email === '' ? '' : form.email,
         followUpDate: form.followUpDate ? new Date(form.followUpDate).toISOString() : null,
       });
       setEditing(false);
